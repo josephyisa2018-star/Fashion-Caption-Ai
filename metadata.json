@@ -1,0 +1,8 @@
+{
+  "name": "Remix AI Fashion Caption \u0026 Content Generator",
+  "description": "An academic B.Sc. project demonstrating AI-driven fashion product captioning, personalized descriptions, and marketing content generation using OpenAI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

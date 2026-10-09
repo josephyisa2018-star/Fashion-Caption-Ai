@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Fashion Caption - AI Fashion Captioning System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">Generate Fashion Content</h2>
+                <p class="text-muted mb-0">Provide product specifications and image to generate an accurate caption, description, and marketing copy.</p>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm fw-medium" id="btnLoadExample">
+                <i class="bi bi-lightning-charge me-1"></i> Fill Sample (Pheebemi Fashion)
+            </button>
+        </div>
+
+        <form action="{{ url_for('products.generate') }}" method="POST" enctype="multipart/form-data" id="generateForm" class="card border-0 shadow-sm p-4 bg-white rounded-3">
+            <div class="row g-3">
+                <!-- Section 1: Product Core Details -->
+                <div class="col-12">
+                    <h5 class="fw-bold text-dark border-bottom pb-2">1. Garment Identity & Attributes</h5>
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="product_name" class="form-label fw-semibold small">Product Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="product_name" name="product_name" placeholder="e.g. Classic African Print Dress" value="{{ form_data.product_name if form_data else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="category" class="form-label fw-semibold small">Category <span class="text-danger">*</span></label>
+                    <select class="form-select" id="category" name="category" required>
+                        <option value="">Select Category...</option>
+                        <option value="Women's Dress">Women's Dress</option>
+                        <option value="Men's Outerwear">Men's Outerwear</option>
+                        <option value="Tailored Blazer">Tailored Blazer</option>
+                        <option value="Evening Gown">Evening Gown</option>
+                        <option value="Streetwear Apparel">Streetwear Apparel</option>
+                        <option value="Footwear">Footwear</option>
+                        <option value="Fashion Accessories">Fashion Accessories</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="colour" class="form-label fw-semibold small">Primary Colour(s) <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="colour" name="colour" placeholder="e.g. Blue and Gold" value="{{ form_data.colour if form_data else '' }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="fabric" class="form-label fw-semibold small">Fabric / Material <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="fabric" name="fabric" placeholder="e.g. Ankara Cotton, Silk, Linen" value="{{ form_data.fabric if form_data else '' }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="style" class="form-label fw-semibold small">Silhouette / Style <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="style" name="style" placeholder="e.g. Elegant, A-Line, Tailored" value="{{ form_data.style if form_data else '' }}" required>
+                </div>
+
+                <!-- Section 2: Brand Voice & Personalization -->
+                <div class="col-12 mt-4">
+                    <h5 class="fw-bold text-dark border-bottom pb-2">2. Brand Voice & Audience Personalization</h5>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="brand_name" class="form-label fw-semibold small">Brand Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="brand_name" name="brand_name" placeholder="e.g. Pheebemi Fashion" value="{{ form_data.brand_name if form_data else '' }}" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="brand_voice" class="form-label fw-semibold small">Desired Brand Voice <span class="text-danger">*</span></label>
+                    <select class="form-select" id="brand_voice" name="brand_voice" required>
+                        <option value="Professional">Professional</option>
+                        <option value="Elegant" selected>Elegant</option>
+                        <option value="Friendly">Friendly</option>
+                        <option value="Luxury">Luxury</option>
+                        <option value="Casual">Casual</option>
+                        <option value="Modern">Modern</option>
+                        <option value="Minimalist">Minimalist</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="occasion" class="form-label fw-semibold small">Occasion <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="occasion" name="occasion" placeholder="e.g. Wedding, Corporate Office, Gala" value="{{ form_data.occasion if form_data else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="target_audience" class="form-label fw-semibold small">Target Audience <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="target_audience" name="target_audience" placeholder="e.g. Young Women, Corporate Executives" value="{{ form_data.target_audience if form_data else '' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="keywords" class="form-label fw-semibold small">Essential Keywords</label>
+                    <input type="text" class="form-control" id="keywords" name="keywords" placeholder="e.g. African print, stylish, elegant, wedding" value="{{ form_data.keywords if form_data else '' }}">
+                </div>
+
+                <div class="col-12">
+                    <label for="additional_information" class="form-label fw-semibold small">Additional Product Information (Optional)</label>
+                    <textarea class="form-control" id="additional_information" name="additional_information" rows="2" placeholder="Specific details such as cuff style, zipper closure, or lining.">{{ form_data.additional_information if form_data else '' }}</textarea>
+                </div>
+
+                <!-- Section 3: Image Upload & Preview -->
+                <div class="col-12 mt-4">
+                    <h5 class="fw-bold text-dark border-bottom pb-2">3. Product Image Upload</h5>
+                </div>
+
+                <div class="col-md-7">
+                    <label for="product_image" class="form-label fw-semibold small">Select Product Image (JPG, PNG, WEBP)</label>
+                    <input class="form-control" type="file" id="product_image" name="product_image" accept=".jpg,.jpeg,.png,.webp">
+                    <div class="form-text small text-muted">Upload a clear photo of the garment. Max file size: 16MB.</div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="border rounded p-2 text-center bg-light" style="min-height: 140px;" id="previewContainer">
+                        <img id="imagePreview" src="" alt="Preview" class="img-fluid rounded d-none" style="max-height: 150px; object-fit: contain;">
+                        <div id="previewPlaceholder" class="text-muted py-4 small">
+                            <i class="bi bi-image fs-2 d-block mb-1 text-secondary"></i>
+                            Image preview will appear here
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-12 mt-4 pt-2">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm" id="btnSubmit">
+                        <span id="btnText"><i class="bi bi-cpu me-2"></i> Generate Caption & Content with OpenAI</span>
+                        <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                    <div class="text-center mt-2 small text-muted">
+                        <i class="bi bi-shield-check text-success me-1"></i> Adheres to strict anti-hallucination prompt guardrails and logs latency automatically.
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Live image preview
+    const imageInput = document.getElementById('product_image');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    imagePreview.src = evt.target.result;
+                    imagePreview.classList.remove('d-none');
+                    previewPlaceholder.classList.add('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Load Example Preset
+    document.getElementById('btnLoadExample')?.addEventListener('click', function() {
+        document.getElementById('product_name').value = 'Classic African Print Dress';
+        document.getElementById('category').value = "Women's Dress";
+        document.getElementById('colour').value = 'Blue and Gold';
+        document.getElementById('fabric').value = 'Ankara';
+        document.getElementById('style').value = 'Elegant';
+        document.getElementById('brand_name').value = 'Pheebemi Fashion';
+        document.getElementById('brand_voice').value = 'Elegant';
+        document.getElementById('occasion').value = 'Wedding';
+        document.getElementById('target_audience').value = 'Young Women';
+        document.getElementById('keywords').value = 'African print, stylish, elegant, wedding';
+        document.getElementById('additional_information').value = 'Midi-length flared dress with belted waist tie and long puff sleeves.';
+    });
+
+    // Form submission spinner
+    document.getElementById('generateForm')?.addEventListener('submit', function() {
+        document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('btnSpinner').classList.remove('d-none');
+        document.getElementById('btnText').textContent = 'Processing Multimodal Request...';
+    });
+</script>
+{% endblock %}

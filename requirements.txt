@@ -1,0 +1,9 @@
+# Academic B.Sc. Project: AI-Driven Fashion Product Captioning and Content Generation Using OpenAI
+# Python 3.10+ Dependencies
+
+Flask>=3.0.0
+openai>=1.40.0
+mysql-connector-python>=8.3.0
+python-dotenv>=1.0.1
+Werkzeug>=3.0.3
+requests>=2.31.0

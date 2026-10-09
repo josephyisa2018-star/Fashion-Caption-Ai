@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluate Caption - Chapter Four Performance Testing{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-warning-subtle text-warning-emphasis fw-semibold mb-1">Chapter Four Methodology</span>
+                <h2 class="fw-bold text-dark mb-1">Fashion Caption Performance Evaluation</h2>
+                <p class="text-muted mb-0">Compare the AI-generated caption against a reference ground-truth to compute attribute metrics and human ratings.</p>
+            </div>
+            <a href="{{ url_for('products.results', caption_id=item.caption_id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Result
+            </a>
+        </div>
+
+        <form action="{{ url_for('evaluation.evaluate', caption_id=item.caption_id) }}" method="POST" id="evalForm">
+            <!-- Product & AI Caption Reference -->
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">1. AI-Generated Fashion Caption Under Test</h5>
+                
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center mb-3 mb-md-0">
+                        {% if item.image_path %}
+                            <img src="/{{ item.image_path }}" alt="{{ item.product_name }}" class="rounded shadow-sm img-fluid" style="max-height: 140px; object-fit: contain;">
+                        {% endif %}
+                        <div class="fw-bold text-dark mt-2 small">{{ item.product_name }}</div>
+                        <div class="text-muted small">{{ item.category }} · {{ item.brand_name }}</div>
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label fw-semibold text-muted small">Generated Caption Text:</label>
+                        <div class="p-3 bg-light border rounded-3 fw-medium text-dark" id="aiGeneratedCaption">
+                            {{ item.caption_text }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label for="reference_caption" class="form-label fw-semibold small">Ground-Truth / Reference Caption <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="reference_caption" name="reference_caption" rows="2" placeholder="e.g. Classic blue and gold Ankara African print midi dress with elegant flare for wedding guests." required>{{ item.colour }} {{ item.fabric }} {{ item.product_name }} styled for {{ item.occasion }} by {{ item.brand_name }}.</textarea>
+                    <div class="form-text small text-muted">A human benchmark description containing the ground-truth fashion attributes.</div>
+                </div>
+            </div>
+
+            <!-- Attribute-Based Confusion Matrix Entry -->
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">2. Attribute-Based Fashion Evaluation (TP / FP / FN)</h5>
+                <p class="small text-muted mb-3">
+                    In fashion captioning, evaluation is performed on key garment attributes (type, colour, fabric, style, occasion, audience) rather than simple word counts.
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <label for="true_positive" class="form-label fw-bold text-success mb-1">
+                                <i class="bi bi-check-circle me-1"></i> True Positive (TP)
+                            </label>
+                            <input type="number" min="0" max="20" class="form-control form-control-lg font-monospace metric-input" id="true_positive" name="true_positive" value="5" required>
+                            <small class="text-muted d-block mt-1">Correct attributes identified (e.g. blue, gold, dress, Ankara, wedding).</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <label for="false_positive" class="form-label fw-bold text-danger mb-1">
+                                <i class="bi bi-x-circle me-1"></i> False Positive (FP)
+                            </label>
+                            <input type="number" min="0" max="20" class="form-control form-control-lg font-monospace metric-input" id="false_positive" name="false_positive" value="1" required>
+                            <small class="text-muted d-block mt-1">Incorrect or unsupported attributes generated by AI (hallucinations).</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-3 bg-light">
+                            <label for="false_negative" class="form-label fw-bold text-warning-emphasis mb-1">
+                                <i class="bi bi-dash-circle me-1"></i> False Negative (FN)
+                            </label>
+                            <input type="number" min="0" max="20" class="form-control form-control-lg font-monospace metric-input" id="false_negative" name="false_negative" value="1" required>
+                            <small class="text-muted d-block mt-1">Ground-truth attributes in reference that AI missed.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Real-Time Metric Preview -->
+                <div class="mt-4 p-3 bg-primary-subtle rounded-3">
+                    <h6 class="fw-bold text-primary mb-2">Calculated Performance Metrics (Dynamic Preview)</h6>
+                    <div class="row text-center g-2">
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Accuracy</div>
+                            <div class="fs-4 fw-bold text-dark font-monospace" id="prevAccuracy">83.33%</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Precision</div>
+                            <div class="fs-4 fw-bold text-dark font-monospace" id="prevPrecision">83.33%</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">Recall</div>
+                            <div class="fs-4 fw-bold text-dark font-monospace" id="prevRecall">83.33%</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="small text-muted">F1-Score</div>
+                            <div class="fs-4 fw-bold text-dark font-monospace" id="prevF1">83.33%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Human Evaluation Likert Scale -->
+            <div class="card border-0 shadow-sm rounded-3 p-4 bg-white mb-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">3. Human Quality Rating (1–5 Likert Scale)</h5>
+                <p class="small text-muted mb-3">Rate the quality of the generated caption across the five academic criteria (1 = Very Poor, 5 = Excellent).</p>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">1. Relevance</label>
+                        <select class="form-select" name="rate_relevance" id="rate_relevance">
+                            <option value="5">5 - Excellent (Highly Relevant)</option>
+                            <option value="4" selected>4 - Good</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">2. Clarity</label>
+                        <select class="form-select" name="rate_clarity" id="rate_clarity">
+                            <option value="5">5 - Excellent (Crystal Clear)</option>
+                            <option value="4" selected>4 - Good</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">3. Fashion Description Quality</label>
+                        <select class="form-select" name="rate_quality" id="rate_quality">
+                            <option value="5" selected>5 - Excellent (Expert Tailoring Vocabulary)</option>
+                            <option value="4">4 - Good</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <label class="form-label small fw-semibold">4. Brand Consistency (Voice: {{ item.brand_voice }})</label>
+                        <select class="form-select" name="rate_brand" id="rate_brand">
+                            <option value="5">5 - Excellent (Flawless Tone Alignment)</option>
+                            <option value="4" selected>4 - Good</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Very Poor</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <label class="form-label small fw-semibold">5. Overall Quality</label>
+                        <select class="form-select" name="rate_overall" id="rate_overall">
+                            <option value="5">5 - Excellent (Production Ready)</option>
+                            <option value="4" selected>4 - Good</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Very Poor</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid mb-5">
+                <button type="submit" class="btn btn-warning btn-lg fw-bold shadow-sm">
+                    <i class="bi bi-save me-2"></i> Save Evaluation & Log to Chapter Four Database
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateMetrics() {
+        const tp = parseFloat(document.getElementById('true_positive').value) || 0;
+        const fp = parseFloat(document.getElementById('false_positive').value) || 0;
+        const fn = parseFloat(document.getElementById('false_negative').value) || 0;
+
+        // Precision = TP / (TP + FP)
+        const precision = (tp + fp) > 0 ? (tp / (tp + fp)) * 100 : 0;
+        // Recall = TP / (TP + FN)
+        const recall = (tp + fn) > 0 ? (tp / (tp + fn)) * 100 : 0;
+        // F1 = 2 * (P * R) / (P + R)
+        const f1 = (precision + recall) > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+        // Accuracy = TP / (TP + FN)
+        const accuracy = (tp + fn) > 0 ? (tp / (tp + fn)) * 100 : 0;
+
+        document.getElementById('prevAccuracy').textContent = accuracy.toFixed(2) + '%';
+        document.getElementById('prevPrecision').textContent = precision.toFixed(2) + '%';
+        document.getElementById('prevRecall').textContent = recall.toFixed(2) + '%';
+        document.getElementById('prevF1').textContent = f1.toFixed(2) + '%';
+    }
+
+    document.querySelectorAll('.metric-input').forEach(input => {
+        input.addEventListener('input', updateMetrics);
+    });
+    updateMetrics();
+</script>
+{% endblock %}

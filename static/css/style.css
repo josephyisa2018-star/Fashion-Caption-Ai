@@ -1,0 +1,43 @@
+/* Custom Styling for AI-Driven Fashion Captioning System */
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    background-color: #f8fafc;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.font-monospace {
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+.card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tracking-tight {
+    letter-spacing: -0.03em;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+}
